@@ -1,0 +1,67 @@
+name: Build Reprocessing (Android)
+
+on:
+  workflow_dispatch:
+  push:
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Install NDK and CMake
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "ndk;26.1.10909125" "cmake;3.22.1" "platforms;android-34" "build-tools;34.0.0"
+
+      - name: Build APK (launcher + libs)
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+
+      - name: Collect native libs
+        run: |
+          mkdir -p dist
+          cp android/app/build/outputs/apk/debug/*.apk dist/ || true
+          # as .so geradas (server + client) para cada ABI
+          unzip -o -q dist/*.apk 'lib/*' -d dist/apk-libs || true
+          find dist/apk-libs -name '*.so' | sort
+
+      - name: Collect libs with symbols (for crash analysis)
+        run: |
+          mkdir -p dist/symbols
+          for f in $(find android/app/build/intermediates -path '*cxx*' -path '*/obj/*' -name '*.so' 2>/dev/null); do
+            abi=$(basename "$(dirname "$f")")
+            mkdir -p "dist/symbols/$abi"
+            cp "$f" "dist/symbols/$abi/"
+          done
+          find dist/symbols -type f | sort
+
+      - name: Upload libs with symbols
+        uses: actions/upload-artifact@v4
+        with:
+          name: Reprocessing-libs-symbols
+          path: dist/symbols
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: ReprocessingLauncher-apk
+          path: dist/*.apk
+
+      - name: Upload native libs
+        uses: actions/upload-artifact@v4
+        with:
+          name: Reprocessing-libs
+          path: dist/apk-libs/lib
