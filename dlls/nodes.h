@@ -116,7 +116,14 @@ typedef struct
 //=========================================================
 // CGraph
 //=========================================================
+// The graph file stores whole CGraph/CLink structures (they contain pointers), so 32 and 64 bit
+// builds must not read each other's files. 64 bit builds use a different version number,
+// which makes them ignore old 32 bit .nod files and rebuild the graph.
+#if defined(__LP64__) || defined(_WIN64)
+#define GRAPH_VERSION (int)160
+#else
 #define GRAPH_VERSION (int)16 // !!!increment this whever graph/node/link classes change, to obsolesce older disk files.
+#endif
 class CGraph
 {
 public:
