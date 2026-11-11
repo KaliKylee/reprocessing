@@ -28,6 +28,7 @@
 #include "schedule.h"
 #include "scripted.h"
 #include "defaultai.h"
+#include "hf_log.h"
 
 
 
@@ -277,6 +278,7 @@ bool CCineMonster::FindEntity()
 				return true;
 			}
 			ALERT(at_console, "Found %s, but can't play!\n", STRING(m_iszEntity));
+			HF_Log("script \"%s\": achou \"%s\" mas ele nao pode tocar a sequencia", STRING(pev->targetname), STRING(m_iszEntity));
 		}
 		pentTarget = FIND_ENTITY_BY_TARGETNAME(pentTarget, STRING(m_iszEntity));
 		pTarget = NULL;
@@ -472,11 +474,17 @@ void CCineMonster::CineThink()
 	{
 		PossessEntity();
 		ALERT(at_aiconsole, "script \"%s\" using monster \"%s\"\n", STRING(pev->targetname), STRING(m_iszEntity));
+		HF_Log("script \"%s\": usando monstro \"%s\"", STRING(pev->targetname), STRING(m_iszEntity));
 	}
 	else
 	{
 		CancelScript();
 		ALERT(at_aiconsole, "script \"%s\" can't find monster \"%s\"\n", STRING(pev->targetname), STRING(m_iszEntity));
+		{
+			static int s_noMonsterLogs = 0;
+			if (s_noMonsterLogs++ < 20)
+				HF_Log("script \"%s\": monstro \"%s\" NAO encontrado", STRING(pev->targetname), STRING(m_iszEntity));
+		}
 		pev->nextthink = gpGlobals->time + 1.0;
 	}
 }
@@ -495,6 +503,7 @@ bool CCineMonster::StartSequence(CBaseMonster* pTarget, int iszSeq, bool complet
 	if (pTarget->pev->sequence == -1)
 	{
 		ALERT(at_error, "%s: unknown scripted sequence \"%s\"\n", STRING(pTarget->pev->targetname), STRING(iszSeq));
+		HF_Log("script: sequencia \"%s\" nao existe no modelo de %s", STRING(iszSeq), STRING(pTarget->pev->classname));
 		pTarget->pev->sequence = 0;
 		// return false;
 	}

@@ -830,6 +830,9 @@ void UTIL_HudMessage(CBaseEntity* pEntity, const hudtextparms_t& textparms, cons
 	if (!pEntity || !pEntity->IsNetClient())
 		return;
 
+	HF_Log("texto: canal=%d efeito=%d fadein=%.2f fadeout=%.2f hold=%.2f \"%.48s\"", textparms.channel, textparms.effect,
+		textparms.fadeinTime, textparms.fadeoutTime, textparms.holdTime, pMessage);
+
 	MESSAGE_BEGIN(MSG_ONE, SVC_TEMPENTITY, NULL, pEntity->edict());
 	WRITE_BYTE(TE_TEXTMESSAGE);
 	WRITE_BYTE(textparms.channel & 0xFF);

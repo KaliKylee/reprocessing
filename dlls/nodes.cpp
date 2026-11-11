@@ -28,6 +28,7 @@
 #include "animation.h"
 #include "doors.h"
 #include "filesystem_utils.h"
+#include "hf_log.h"
 
 #define HULL_STEP_SIZE 16 // how far the test hull moves on each step
 #define NODE_HEIGHT 8	  // how high to lift nodes off the ground after we drop them all (make stair/ramp mapping easier)
@@ -876,6 +877,11 @@ int CGraph::FindNearestNode(const Vector& vecOrigin, int afNodeTypes)
 	if (0 == m_fGraphPresent || 0 == m_fGraphPointersSet)
 	{ // protect us in the case that the node graph isn't available
 		ALERT(at_aiconsole, "Graph not ready!\n");
+		{
+			static int s_notReadyLogs = 0;
+			if (s_notReadyLogs++ < 10)
+				HF_Log("grafo nao esta pronto (FindNearestNode)");
+		}
 		return -1;
 	}
 
@@ -2244,6 +2250,8 @@ void CTestHull::BuildNodeGraph()
 	//
 	WorldGraph.ComputeStaticRoutingTables();
 
+	HF_Log("grafo: construido (%d nos, %d links)", WorldGraph.m_cNodes, WorldGraph.m_cLinks);
+
 	// save the node graph for this level
 	WorldGraph.FSaveGraph(STRING(gpGlobals->mapname));
 	ALERT(at_console, "Done.\n");
@@ -2515,6 +2523,7 @@ bool CGraph::FLoadGraph(const char* szMapName)
 
 	if (buffer.empty())
 	{
+		HF_Log("grafo: %s nao encontrado (sera construido)", fileName.c_str());
 		return false;
 	}
 
@@ -2538,6 +2547,7 @@ bool CGraph::FLoadGraph(const char* szMapName)
 		// This file was written by a different build of the dll!
 		//
 		ALERT(at_aiconsole, "**ERROR** Graph version is %d, expected %d\n", iVersion, GRAPH_VERSION);
+		HF_Log("grafo: %s tem versao %d, esperado %d (sera reconstruido)", fileName.c_str(), iVersion, GRAPH_VERSION);
 		return false;
 	}
 
@@ -2663,6 +2673,7 @@ bool CGraph::FLoadGraph(const char* szMapName)
 		ALERT(at_aiconsole, "***WARNING***:Node graph was longer than expected by %d bytes.!\n", length);
 	}
 
+	HF_Log("grafo: carregado de %s (%d nos, %d links)", fileName.c_str(), m_cNodes, m_cLinks);
 	return true;
 }
 
@@ -2690,6 +2701,7 @@ bool CGraph::FSaveGraph(const char* szMapName)
 	if (!file)
 	{ // couldn't create
 		ALERT(at_aiconsole, "Couldn't Create: %s\n", fileName.c_str());
+		HF_Log("grafo: NAO foi possivel gravar %s", fileName.c_str());
 		return false;
 	}
 
@@ -2719,6 +2731,7 @@ bool CGraph::FSaveGraph(const char* szMapName)
 	{
 		file.Write(m_pHashLinks, sizeof(short) * m_nHashLinks);
 	}
+	HF_Log("grafo: gravado %s (%d nos, %d links)", fileName.c_str(), m_cNodes, m_cLinks);
 	return true;
 }
 
