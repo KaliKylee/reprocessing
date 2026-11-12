@@ -22,6 +22,7 @@
 #include "util.h"
 #include "cbase.h"
 #include "doors.h"
+#include "hf_log.h"
 
 
 extern void SetMovedir(entvars_t* ev);
@@ -611,6 +612,8 @@ extern Vector VecBModelOrigin(entvars_t* pevBModel);
 void CBaseDoor::DoorGoUp()
 {
 	entvars_t* pevActivator;
+
+	HF_Log("porta: abrindo \"%s\" (%s)", STRING(pev->targetname), STRING(pev->classname));
 
 	// It could be going-down, if blocked.
 	ASSERT(m_toggle_state == TS_AT_BOTTOM || m_toggle_state == TS_GOING_DOWN);

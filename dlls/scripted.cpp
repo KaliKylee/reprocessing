@@ -493,6 +493,7 @@ void CCineMonster::CineThink()
 // lookup a sequence name and setup the target monster to play it
 bool CCineMonster::StartSequence(CBaseMonster* pTarget, int iszSeq, bool completeOnEmpty)
 {
+	HF_Log("script \"%s\": StartSequence \"%s\" em %s \"%s\"", STRING(pev->targetname), STRING(iszSeq), pTarget ? STRING(pTarget->pev->classname) : "?", pTarget ? STRING(pTarget->pev->targetname) : "?");
 	if (FStringNull(iszSeq) && completeOnEmpty)
 	{
 		SequenceDone(pTarget);
@@ -562,6 +563,7 @@ bool CCineAI::StartSequence(CBaseMonster* pTarget, int iszSeq, bool completeOnEm
 //=========================================================
 void CCineMonster::SequenceDone(CBaseMonster* pMonster)
 {
+	HF_Log("script \"%s\": sequencia terminou", STRING(pev->targetname));
 	//ALERT( at_aiconsole, "Sequence %s finished\n", STRING( m_pCine->m_iszPlay ) );
 
 	if ((pev->spawnflags & SF_SCRIPT_REPEATABLE) == 0)
@@ -707,6 +709,7 @@ void ScriptEntityCancel(edict_t* pentCine)
 // find all the cinematic entities with my targetname and stop them from playing
 void CCineMonster::CancelScript()
 {
+	HF_Log("script \"%s\": CANCELADO", STRING(pev->targetname));
 	ALERT(at_aiconsole, "Cancelling script: %s\n", STRING(m_iszPlay));
 
 	if (FStringNull(pev->targetname))

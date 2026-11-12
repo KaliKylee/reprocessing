@@ -25,6 +25,7 @@
 #include "nodes.h"
 #include "defaultai.h"
 #include "soundent.h"
+#include "hf_log.h"
 
 //=========================================================
 // FHaveSchedule - Returns true if monster's m_pSchedule
@@ -260,6 +261,12 @@ void CBaseMonster::MaintainSchedule()
 					pNewSchedule = GetScheduleOfType(SCHED_FAIL);
 				// schedule was invalid because the current task failed to start or complete
 				ALERT(at_aiconsole, "Schedule Failed at %d!\n", m_iScheduleIndex);
+				{
+					static int s_schedFailLogs = 0;
+					if (s_schedFailLogs++ < 40)
+						HF_Log("IA: %s \"%s\" falhou na tarefa %d da agenda \"%s\"", STRING(pev->classname), STRING(pev->targetname),
+							m_iScheduleIndex, m_pSchedule ? m_pSchedule->pName : "?");
+				}
 				ChangeSchedule(pNewSchedule);
 			}
 			else
@@ -990,6 +997,11 @@ void CBaseMonster::StartTask(Task_t* pTask)
 				{
 					TaskFail();
 					ALERT(at_aiconsole, "%s Failed to reach target!!!\n", STRING(pev->classname));
+					{
+						static int s_reachLogs = 0;
+						if (s_reachLogs++ < 40)
+							HF_Log("IA: %s \"%s\" nao conseguiu chegar ao alvo (rota falhou)", STRING(pev->classname), STRING(pev->targetname));
+					}
 					RouteClear();
 				}
 			}
